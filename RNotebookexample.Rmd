@@ -1,0 +1,82 @@
+---
+output_dir: "."
+title: "RNotebookexample"
+output: html_document
+---
+
+```{r load-data, message=FALSE}
+#Now you can make comment using hashtag
+library(tidyverse)
+library(kableExtra) #used for kbl() in Rmarkdown
+library(rmarkdown) #used for paged_table()
+library(ggpubr) #used for ggarange()
+
+#Read file into R
+pop_data <- read_csv("data/gapminder_data.csv")
+
+#Create a table with data from EU countries in 2007 - ordered by life expectancy
+euro_data_tbl <- pop_data %>% 
+  filter(continent == "Europe" & year == 2007) %>% 
+  select(-continent, -year) %>% 
+  #because the data have the same info 
+  arrange(desc(lifeExp)) %>% 
+  #change the name of the variables, new term first, original follows
+  rename(Country = country, "Population Size" = pop, "Life Expectancy" = lifeExp, GDP = gdpPercap)
+
+```
+
+The results in euro_data_tbl are displayed in the Table below:
+
+```{r kbl}
+euro_data_tbl %>% 
+  kbl() %>% 
+  kable_styling(bootstrap_options = c("striped", full_width = F)) %>% 
+      scroll_box(width="100%", height = "200px")
+
+```
+
+This is a better way to display long tables:
+
+```{r paged-table}
+paged_table(euro_data_tbl)
+```
+
+#Adding images
+
+```{r adding images}
+#Create a new dataset euro_data_fig by filtering the pop_data tibble to contain only data from Europe. 
+#Draw a plot to display the lifeExp on the y axis and year on the x axis. 
+#Use geom_violin() to draw this as a violin plot to show the distrubution of the data across each year and save it in a euro_plot` variable.
+
+euro_data_fig <- pop_data %>% 
+  filter(continent == "Europe") %>% 
+  select(country, year, lifeExp) %>% 
+  mutate(year=as_factor(year))
+
+euro_plot <- euro_data_fig %>% 
+  ggplot(aes(x=year, y=lifeExp)) +
+  geom_violin()
+  
+
+```
+
+Now we will display more than one image together:
+
+```{r fig-comp}
+#keep only UK data
+uk_data_fig <- pop_data %>% 
+  filter(country == "United Kingdom") %>% 
+  mutate(year=as_factor(year))
+
+#UK plot
+uk_plot <- uk_data_fig %>% 
+  ggplot(mapping=aes(x=year, y=lifeExp)) +
+  geom_point()
+
+#plot EU and UK plots together
+ggarrange(euro_plot, uk_plot, ncol= 2, nrow=1, labels = "AUTO")
+#read ggarange help
+
+```
+
+
